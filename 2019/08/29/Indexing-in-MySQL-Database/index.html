@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="en"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>Indexing in MySQL Database | Cindylyl's Notes</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Indexing in MySQL Database</h1><a id="logo" href="/.">Cindylyl's Notes</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> Home</i></a><a href="/archives/"><i class="fa fa-archive"> Archive</i></a><a href="/about/"><i class="fa fa-user"> About</i></a><a href="/atom.xml"><i class="fa fa-rss"> RSS</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Indexing in MySQL Database</h1><div class="post-meta">Aug 29, 2019</div><a class="disqus-comment-count" data-disqus-identifier="2019/08/29/Indexing-in-MySQL-Database/" href="/2019/08/29/Indexing-in-MySQL-Database/#disqus_thread"></a><div class="post-content"><p>In order to increase speed of searching a record in the database, we usually create indice. Actually, indexing is a kind of data structure.<br>For finding a specific element in a table, the common way is to search one by one. However, its time complexity is O(n). A wiser way is to use Binary Search Tree whose time complexity is O(log(n)). Sounds great? Here is the thing, index files store in external memory so swithching from one block (node) to another block is time comsuming. The more nodes a tree has, the more time it takes to deal with I/O operation for the disk. Our goal is to reduce the height of the tree(or the number of nodes), so that B-trees and B+ trees are decent choices. It is because multiple keys are able to store in one node, so the height of the tree drop down rapidly.</p>
+<hr>
+<p>B-tree and B+ tree</p>
+<p>Both B-trees and B+ trees are a kind of balanced multi-way search tree.</p>
+<p><img src="https://i.stack.imgur.com/l6UyF.png" alt="b-tree &amp; b+ tree"></p>
+<p>b-tree &amp; b+ tree<br>Goodness for B+ trees</p>
+<ul>
+<li><p>B-trees store both key and data in each node (interal node and leaves), while B+ trees store only data in leaf node. This allows more number of nodes(/keys) to contain in a given size of block, which means it takes less number of times on I/O operation for disk (less switching between two blocks). In most cases, we have to access data that is on a leaf node so it costs less time on average.</p>
+</li>
+<li><p>The leaf nodes of a B+ treee are linked. Thus, it is easy to access a range of data that store in different nodes (e.g. range (5,12)). Furthermore, doing a full scan is much easier, since it goes through as a linear linked list. On the other hand, a B-tree has to traverse the tree to do so.</p>
+</li>
+</ul>
+<p>Goodness for B-trees</p>
+<ul>
+<li>Seeking a particular data (near to the root) frequently can obtain the data faster. (You don’t need to reach the leaf node!)</li>
+</ul>
+<hr>
+<p>InnoDB and MyISAM</p>
+<p>In MySQL, B+ trees are used in both InnoDB (default) and MyISAM storage engine.</p>
+<p><img src="http://jbcdn2.b0.upaiyun.com/2012/07/image11111.png" alt="MyISAM"></p>
+<p>MyISAM</p>
+<ul>
+<li>For MyISAM, the physical address of each record is stored in the data field of each leaf node. It means that the index files and the data file are seperated. Here, col1 is the primary key and col2 is secondary key.</li>
+<li>table-level locking<br><img src="http://jbcdn2.b0.upaiyun.com/2012/07/image111.png" alt="InnoDB"></li>
+</ul>
+<p>InnoDB</p>
+<ul>
+<li>Compared with MyISAM, 1) one big difference for InnoDB is that the data field in each leaf node stored the complete records rather than a physical address (clustered index). The key of the index tree(B+ tree) is the primary key of the table. Therefore, InnoDB requires a table must have primary. If there is no primary key, MySQL will chose from existing table or create automatically. 2) Another difference is that each data field of the secondary key stores the relative primary key rather than a physical address.</li>
+<li>Since maintaing the B+ tree features (reblanceing) is time consuming so that is the reasons why we should use short incremental and numerical field as the primary key.</li>
+<li>row-level locking</li>
+</ul>
+<p>To sum up:<br>Frequent reading, almost no writing =&gt; MyISAM<br>Full-text search in MySQL &lt;= 5.5 =&gt; MyISAM<br>In all other circumstances, InnoDB is usually the best way to go.</p>
+<hr>
+<p>Scheme Optimization</p>
+<p>should create index for following columns(fields):</p>
+<ul>
+<li>primary key</li>
+<li>foreign key (connect to other table constantly)</li>
+<li>range searching</li>
+<li>sort frequently</li>
+<li>use where clause frequently</li>
+</ul>
+<p>should not create index for following columns:</p>
+<ul>
+<li>use rarely</li>
+<li>low selectivity (low percentage of distinct data) (e.g. gender)</li>
+</ul>
+<p>prefex indexing</p>
+<ul>
+<li>It uses the prefex replace the whole column value as the index so it ensures the balance between selectivity and size of a field.</li>
+</ul>
+<p>Reference:</p>
+<p><a href="http://stackoverflow.com/questions/870218/differences-between-b-trees-and-b-trees" target="_blank" rel="noopener">http://stackoverflow.com/questions/870218/differences-between-b-trees-and-b-trees</a></p>
+</div><div class="tags"><a href="/tags/Database/">Database</a></div><div class="post-nav"><a class="pre" href="/2019/08/29/HTTP-Request-Response-Process/">HTTP Request/Response Process</a><a class="next" href="/2019/08/29/hello-world/">Hello World</a></div><div id="disqus_thread"><div class="btn_click_load"><button class="disqus_click_btn">阅读评论（请确保 Disqus 可以正常加载）</button></div><script type="text/javascript">var disqus_config = function () {
+    this.page.url = 'http://yoursite.com/2019/08/29/Indexing-in-MySQL-Database/';
+    this.page.identifier = '2019/08/29/Indexing-in-MySQL-Database/';
+    this.page.title = 'Indexing in MySQL Database';
+  };</script><script type="text/javascript" id="disqus-lazy-load-script">$.ajax({
+url: 'https://disqus.com/next/config.json',
+timeout: 2500,
+type: 'GET',
+success: function(){
+  var d = document;
+  var s = d.createElement('script');
+  s.src = '//cindylyl.disqus.com/embed.js';
+  s.setAttribute('data-timestamp', + new Date());
+  (d.head || d.body).appendChild(s);
+  $('.disqus_click_btn').css('display', 'none');
+},
+error: function() {
+  $('.disqus_click_btn').css('display', 'block');
+}
+});</script><script type="text/javascript" id="disqus-click-load">$('.btn_click_load').click(() => {  //click to load comments
+    (() => { // DON'T EDIT BELOW THIS LINE
+        var d = document;
+        var s = d.createElement('script');
+        s.src = '//cindylyl.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', + new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+    $('.disqus_click_btn').css('display','none');
+});</script><script type="text/javascript" id="disqus-count-script">$(function() {
+     var xhr = new XMLHttpRequest();
+     xhr.open('GET', '//disqus.com/next/config.json', true);
+     xhr.timeout = 2500;
+     xhr.onreadystatechange = function () {
+       if (xhr.readyState === 4 && xhr.status === 200) {
+         $('.post-meta .post-comments-count').show();
+         var s = document.createElement('script');
+         s.id = 'dsq-count-scr';
+         s.src = 'https://cindylyl.disqus.com/count.js';
+         s.async = true;
+         (document.head || document.body).appendChild(s);
+       }
+     };
+     xhr.ontimeout = function () { xhr.abort(); };
+     xhr.send(null);
+   });
+</script></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> Categories</i></div></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> Tags</i></div><div class="tagcloud"><a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/Web-Development/" style="font-size: 15px;">Web Development</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> Recent</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/Database-transaction/">Database transaction</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/HTTP-Request-Response-Process/">HTTP Request/Response Process</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/Indexing-in-MySQL-Database/">Indexing in MySQL Database</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/hello-world/">Hello World</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-comment-o"> Recent Comments</i></div><script type="text/javascript" src="//cindylyl.disqus.com/recent_comments_widget.js?num_items=5&amp;hide_avatars=1&amp;avatar_size=32&amp;excerpt_length=20&amp;hide_mods=1"></script></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> Links</i></div></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Cindylyl's Notes.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
