@@ -4,6 +4,44 @@
   
     
     <entry>
+      <title>Django Unit Test</title>
+      <link href="/2019/10/09/Django-Test/"/>
+      <url>/2019/10/09/Django-Test/</url>
+      
+        <content type="html"><![CDATA[<h2 id="Why-unit-test"><a href="#Why-unit-test" class="headerlink" title="Why unit test?"></a>Why unit test?</h2><p>Tests can let us avoid breaking things when doing the refactoring.</p><hr><h2 id="Why-mocking"><a href="#Why-mocking" class="headerlink" title="Why mocking?"></a>Why mocking?</h2><p>We only care about the functionality of a single fuction. For other functions that are called within this function, that’s the responsibilities for other functions.</p><hr><h2 id="Mock-vs-MagicMock"><a href="#Mock-vs-MagicMock" class="headerlink" title="Mock vs MagicMock"></a>Mock vs MagicMock</h2><p>Both MagicMock and Mock allow you to mock a object. MagicMock is the subclass of Mock that provides some default implementaions for magic methods like <code>__iter__</code>, <code>__iter__</code>.</p><p>In this case, if you need to mock a object with a list as the attribute, then you need to use MagicMock.</p><ul><li>return_value</li></ul><p>This attribute set as a single fixed vaue. You get this fixed return value every time you call the mock object.</p><ul><li>side_effect</li></ul><p>This attribute usually set as a list of vaues, then every time the mock object is called, it will return one value from the list in sequence.</p><ul><li>patch</li></ul><p>patch() usually works as a decorator or context manager. Note that you patch where an object is <em>looked up</em>, which is <strong>not</strong> necessarily the same place as where it is defined.</p><hr><ul><li>factory boy (for mocking Django models or other ORM objects)</li></ul><p>allow to declare the test-specific fields (especially for foreignkey related fields). It is supper useful when you wanna mock some foreign key related fields and you don’t bother creating an instance for the foreign key related model. <strong>This class is ususlly used to test model related functionalities</strong></p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># no need to create an Author instance</span></span><br><span class="line">book = BookFactory(title=<span class="string">'Harry Potter'</span>, description=<span class="string">'xxx'</span>, author__name=<span class="string">'J.k Rowling'</span>)</span><br></pre></td></tr></table></figure><ul><li>Client (for mocking http request client, Django-rest-framework)</li></ul><p>This class acts like a “client” to make request to the server. It contains methods like <code>login()</code>, <code>get()</code>, <code>post()</code>, <code>patch()</code>, <code>delete()</code>. <strong>This class is ususlly used to test API related functionalities</strong>.</p><hr><p>TestCase:</p><ul><li>setUpData()</li></ul><p>this is a classmethod, it implementes only one time for the whole test class and provides public initial data for every test cases. Therefore, don’t execute some actions that affect the these public data like deletion.</p><ul><li>setUp()</li></ul><p>this is a instance method, it implements once before each test case. It is ok to execute deletion for the public data, since it is isolated for each test case and execute one time for each test case function.</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Python, Test </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Django-rest-framework View</title>
+      <link href="/2019/09/15/Django-rest-framework-View/"/>
+      <url>/2019/09/15/Django-rest-framework-View/</url>
+      
+        <content type="html"><![CDATA[<p>In most cases, we write view functions in <code>views.py</code>. However, we may write many duplicate codes such as <code>post_list = Post.objects.all()</code> and <code>post = get_object_or_404(Post, pk = pk)</code>. In order to solve this problem, Django provides us generic view class. There are two common class we can inherite. One is ListView, the other is DetailView.</p><h3 id="Class-based-view"><a href="#Class-based-view" class="headerlink" title="Class based view"></a>Class based view</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostView</span><span class="params">(ListView)</span>:</span></span><br><span class="line">    model = Post</span><br><span class="line">    template_name = <span class="string">'blog/index.html'</span></span><br><span class="line">    context_object_name = <span class="string">'post_list'</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_queryset</span><span class="params">(self)</span>:</span></span><br><span class="line">        cate = get_object_or_404(Category, pk=self.kwargs.get(<span class="string">'pk'</span>))</span><br><span class="line">        <span class="keyword">return</span> super(CategoryView, self).get_queryset().filter(category=cate)</span><br></pre></td></tr></table></figure><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostDetailView</span><span class="params">(DetailView)</span>:</span></span><br><span class="line">    model = Post</span><br><span class="line">    template_name = <span class="string">'blog/detail.html'</span></span><br><span class="line">    context_object_name = <span class="string">'post'</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self, request, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="comment"># rewrite get method to implemente extra functions</span></span><br><span class="line">        response = super(PostDetailView, self).get(request, *args, **kwargs)</span><br><span class="line">        self.object.increase_views()</span><br><span class="line">        <span class="comment"># return HttpResponse object</span></span><br><span class="line">        <span class="keyword">return</span> response</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_context_data</span><span class="params">(self, **kwargs)</span>:</span></span><br><span class="line">        <span class="comment"># rewrite get_context_data method to return extra context data</span></span><br><span class="line">        context = super(PostDetailView, self).get_context_data(**kwargs)</span><br><span class="line">        form = CommentForm()</span><br><span class="line">        comment_list = self.object.comment_set.all()</span><br><span class="line">        context.update(&#123;</span><br><span class="line">            <span class="string">'form'</span>: form,</span><br><span class="line">            <span class="string">'comment_list'</span>: comment_list</span><br><span class="line">        &#125;)</span><br><span class="line">        <span class="keyword">return</span> context</span><br></pre></td></tr></table></figure><h3 id="Mixin"><a href="#Mixin" class="headerlink" title="Mixin"></a>Mixin</h3>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Django </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Database transaction</title>
       <link href="/2019/08/29/Database-transaction/"/>
       <url>/2019/08/29/Database-transaction/</url>

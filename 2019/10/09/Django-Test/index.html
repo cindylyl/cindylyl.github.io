@@ -1,0 +1,91 @@
+<!DOCTYPE html><html lang="en"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>Django Unit Test | Cindylyl's Notes</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Django Unit Test</h1><a id="logo" href="/.">Cindylyl's Notes</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> Home</i></a><a href="/archives/"><i class="fa fa-archive"> Archive</i></a><a href="/about/"><i class="fa fa-user"> About</i></a><a href="/atom.xml"><i class="fa fa-rss"> RSS</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Django Unit Test</h1><div class="post-meta">Oct 9, 2019</div><a class="disqus-comment-count" data-disqus-identifier="2019/10/09/Django-Test/" href="/2019/10/09/Django-Test/#disqus_thread"></a><div class="post-content"><h2 id="Why-unit-test"><a href="#Why-unit-test" class="headerlink" title="Why unit test?"></a>Why unit test?</h2><p>Tests can let us avoid breaking things when doing the refactoring.</p>
+<hr>
+<h2 id="Why-mocking"><a href="#Why-mocking" class="headerlink" title="Why mocking?"></a>Why mocking?</h2><p>We only care about the functionality of a single fuction. For other functions that are called within this function, that’s the responsibilities for other functions.</p>
+<hr>
+<h2 id="Mock-vs-MagicMock"><a href="#Mock-vs-MagicMock" class="headerlink" title="Mock vs MagicMock"></a>Mock vs MagicMock</h2><p>Both MagicMock and Mock allow you to mock a object. MagicMock is the subclass of Mock that provides some default implementaions for magic methods like <code>__iter__</code>, <code>__iter__</code>.</p>
+<p>In this case, if you need to mock a object with a list as the attribute, then you need to use MagicMock.</p>
+<ul>
+<li>return_value</li>
+</ul>
+<p>This attribute set as a single fixed vaue. You get this fixed return value every time you call the mock object.</p>
+<ul>
+<li>side_effect</li>
+</ul>
+<p>This attribute usually set as a list of vaues, then every time the mock object is called, it will return one value from the list in sequence.</p>
+<ul>
+<li>patch</li>
+</ul>
+<p>patch() usually works as a decorator or context manager. Note that you patch where an object is <em>looked up</em>, which is <strong>not</strong> necessarily the same place as where it is defined.</p>
+<hr>
+<ul>
+<li>factory boy (for mocking Django models or other ORM objects)</li>
+</ul>
+<p>allow to declare the test-specific fields (especially for foreignkey related fields). It is supper useful when you wanna mock some foreign key related fields and you don’t bother creating an instance for the foreign key related model. <strong>This class is ususlly used to test model related functionalities</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># no need to create an Author instance</span></span><br><span class="line">book = BookFactory(title=<span class="string">'Harry Potter'</span>, description=<span class="string">'xxx'</span>, author__name=<span class="string">'J.k Rowling'</span>)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Client (for mocking http request client, Django-rest-framework)</li>
+</ul>
+<p>This class acts like a “client” to make request to the server. It contains methods like <code>login()</code>, <code>get()</code>, <code>post()</code>, <code>patch()</code>, <code>delete()</code>. <strong>This class is ususlly used to test API related functionalities</strong>.</p>
+<hr>
+<p>TestCase:</p>
+<ul>
+<li>setUpData()</li>
+</ul>
+<p>this is a classmethod, it implementes only one time for the whole test class and provides public initial data for every test cases. Therefore, don’t execute some actions that affect the these public data like deletion.</p>
+<ul>
+<li>setUp()</li>
+</ul>
+<p>this is a instance method, it implements once before each test case. It is ok to execute deletion for the public data, since it is isolated for each test case and execute one time for each test case function.</p>
+</div><div class="tags"><a href="/tags/Python-Test/">Python, Test</a></div><div class="post-nav"><a class="next" href="/2019/09/15/Django-rest-framework-View/">Django-rest-framework View</a></div><div id="disqus_thread"><div class="btn_click_load"><button class="disqus_click_btn">阅读评论（请确保 Disqus 可以正常加载）</button></div><script type="text/javascript">var disqus_config = function () {
+    this.page.url = 'http://yoursite.com/2019/10/09/Django-Test/';
+    this.page.identifier = '2019/10/09/Django-Test/';
+    this.page.title = 'Django Unit Test';
+  };</script><script type="text/javascript" id="disqus-lazy-load-script">$.ajax({
+url: 'https://disqus.com/next/config.json',
+timeout: 2500,
+type: 'GET',
+success: function(){
+  var d = document;
+  var s = d.createElement('script');
+  s.src = '//cindylyl.disqus.com/embed.js';
+  s.setAttribute('data-timestamp', + new Date());
+  (d.head || d.body).appendChild(s);
+  $('.disqus_click_btn').css('display', 'none');
+},
+error: function() {
+  $('.disqus_click_btn').css('display', 'block');
+}
+});</script><script type="text/javascript" id="disqus-click-load">$('.btn_click_load').click(() => {  //click to load comments
+    (() => { // DON'T EDIT BELOW THIS LINE
+        var d = document;
+        var s = d.createElement('script');
+        s.src = '//cindylyl.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', + new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+    $('.disqus_click_btn').css('display','none');
+});</script><script type="text/javascript" id="disqus-count-script">$(function() {
+     var xhr = new XMLHttpRequest();
+     xhr.open('GET', '//disqus.com/next/config.json', true);
+     xhr.timeout = 2500;
+     xhr.onreadystatechange = function () {
+       if (xhr.readyState === 4 && xhr.status === 200) {
+         $('.post-meta .post-comments-count').show();
+         var s = document.createElement('script');
+         s.id = 'dsq-count-scr';
+         s.src = 'https://cindylyl.disqus.com/count.js';
+         s.async = true;
+         (document.head || document.body).appendChild(s);
+       }
+     };
+     xhr.ontimeout = function () { xhr.abort(); };
+     xhr.send(null);
+   });
+</script></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> Categories</i></div></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> Tags</i></div><div class="tagcloud"><a href="/tags/Python-Test/" style="font-size: 15px;">Python, Test</a> <a href="/tags/Django/" style="font-size: 15px;">Django</a> <a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/Web-Development/" style="font-size: 15px;">Web Development</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> Recent</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/10/09/Django-Test/">Django Unit Test</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/15/Django-rest-framework-View/">Django-rest-framework View</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/Database-transaction/">Database transaction</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/HTTP-Request-Response-Process/">HTTP Request/Response Process</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/Indexing-in-MySQL-Database/">Indexing in MySQL Database</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/hello-world/">Hello World</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-comment-o"> Recent Comments</i></div><script type="text/javascript" src="//cindylyl.disqus.com/recent_comments_widget.js?num_items=5&amp;hide_avatars=1&amp;avatar_size=32&amp;excerpt_length=20&amp;hide_mods=1"></script></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> Links</i></div></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Cindylyl's Notes.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
