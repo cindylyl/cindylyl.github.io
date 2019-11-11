@@ -4,6 +4,25 @@
   
     
     <entry>
+      <title>Python magic methods</title>
+      <link href="/2019/11/10/Python-magic-methods/"/>
+      <url>/2019/11/10/Python-magic-methods/</url>
+      
+        <content type="html"><![CDATA[<ul><li><code>__new__()</code> and <code>__init__()</code></li></ul><p><code>__new__()</code> is always called before <code>__init__()</code>.<br>Use <code>__new__</code> when you need to control the creation of a new instance.<br>Use <code>__init__</code> when you need to control initialization of a new instance.</p><p><code>__new__</code> is the first step of instance creation.  It’s called first,<br>and is responsible for returning a new instance of your class.  In<br>contrast, <code>__init__</code> doesn’t return anything; it’s only responsible for<br>initializing the instance after it’s been created.</p><p>In general, you shouldn’t need to override <code>__new__</code> unless you’re<br>subclassing an immutable type like str, int, unicode or tuple.</p><p><a href="https://stackoverflow.com/questions/674304/why-is-init-always-called-after-new" target="_blank" rel="noopener">link</a></p><ul><li><code>__getattr__()</code> and <code>__getattribute__()</code></li></ul><p>We usually use <code>obj.attributee</code> or <code>getattr(obj, field_name)</code> to get the attribute value of an object.</p><p>When a attribute <strong>doesn’t exist</strong> for a object, it will call <code>__getattr__()</code>, while <code>__getattribute__</code> is called whenever an attribute access occurs.<br>if <code>__getattribute__</code> fails, <code>__getattr__</code> is called.</p><p>If you need to catch every attribute regardless whether it exists or not, use <code>__getattribute__</code> instead. The difference is that <code>__getattr__</code> only gets called for attributes that don’t actually exist. If you set an attribute directly, referencing that attribute will retrieve it without calling <code>__getattr__</code>.</p><p><a href="https://stackoverflow.com/questions/4295678/understanding-the-difference-between-getattr-and-getattribute" target="_blank" rel="noopener">link</a></p><p>Example: when you wanna implement some logics like when the value of field1 is None, take the value of field2 of the object.</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Python </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Django Unit Test</title>
       <link href="/2019/10/09/Django-Test/"/>
       <url>/2019/10/09/Django-Test/</url>
