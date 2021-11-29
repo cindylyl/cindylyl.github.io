@@ -4,6 +4,27 @@
   
     
     <entry>
+      <title>Django Database Performance Optimization</title>
+      <link href="/2021/11/22/Django-Database-Performance-Optimization/"/>
+      <url>/2021/11/22/Django-Database-Performance-Optimization/</url>
+      
+        <content type="html"><![CDATA[<p>As a project grows, our database size turns larger and we may experience longer waiting time when query an API.<br>Then it is time to make some performance optimizations. DB query is one of the items that causes performance reduction.</p><h2 id="Profiling"><a href="#Profiling" class="headerlink" title="Profiling"></a>Profiling</h2><p>The fisrt thing we need to do to address performance issues is profiling. We need to know what are the SQL queries we executes and<br>what how long does executing a query take.</p><h3 id="profiling-tools"><a href="#profiling-tools" class="headerlink" title="profiling tools"></a>profiling tools</h3><ul><li><a href="https://github.com/jazzband/django-silk" target="_blank" rel="noopener">silk</a>: It contains SQL Inspection and <a href="https://docs.python.org/3/library/profile.html?highlight=cprofile#module-cProfile" target="_blank" rel="noopener">cProfile</a>. On SQL Inspection part, it is easy for you to know what are the actual SQL you executes and which line of<br>code triggers the query.</li></ul><hr><h2 id="Retrieve-by-indexed-column"><a href="#Retrieve-by-indexed-column" class="headerlink" title="Retrieve by indexed column"></a>Retrieve by indexed column</h2><p>Try to use</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Employee.objects.filter(id__in=[id1, id2, ...])</span><br></pre></td></tr></table></figure><p>instead of</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Employee.objects.filter(name__in=[name1, name2, ...])</span><br></pre></td></tr></table></figure><hr><h2 id="Avoid-N-1-queries"><a href="#Avoid-N-1-queries" class="headerlink" title="Avoid N+1 queries"></a>Avoid N+1 queries</h2><p>N+1 queries are caused by retrieve foreign key or many to many key model properties. For each model instance, it will produce 1 extra query.<br>Therefore, if we have N model instances, then it will end up N + 1 queries.</p><h3 id="select-related-prefetch-related-Prefetch-object"><a href="#select-related-prefetch-related-Prefetch-object" class="headerlink" title="select_related(), prefetch_related(), Prefetch() object"></a><code>select_related()</code>, <code>prefetch_related()</code>, <code>Prefetch()</code> object</h3><p><code>select_related()</code> implements joins tables on database level, while <code>prefetch_related()</code> implements joins on Python code level.</p><p>Note that if you use <code>iterator()</code> to run the query, <code>prefetch_related()</code> calls will be ignored since these two optimizations do not make sense together.</p><p>Besides, for <code>prefetch_related()</code>, it needs to be noted that it only works for QuerySet <code>all()</code>, any subsequent chained methods which imply a different database query will ignore previously cached results, and retrieve data using a fresh database query.</p><p>For example:</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; pizzas = Pizza.objects.prefetch_related(&apos;toppings&apos;)</span><br><span class="line">&gt;&gt;&gt; [list(pizza.toppings.filter(spicy=True)) for pizza in pizzas]</span><br></pre></td></tr></table></figure><p>Here, <code>pizza.toppings.all()</code> is the cached result. <code>pizza.toppings.filter(spicy=True)</code> will produce a new query.</p><p>What if we need to pre-fetch from sub query set instead of all query set like above or control the queryset that order by a specific field? <code>Prefetch()</code> object can help.</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">spicy_toppings = Toppings.objects.filer(spicy=<span class="literal">True</span>)</span><br><span class="line">pizzas = Pizza.objects.prefetch_related(Prefetch(<span class="string">'toppings'</span>, queryset=spicy_toppings, to_attr=<span class="string">'spicy_toppings'</span>))</span><br></pre></td></tr></table></figure><p>Note that assign the prefetched result to a custom attribute with the optional <code>to_attr</code> argument. The result will be stored directly in a list and it can improve speed proformance.</p><h3 id="caching-cached-property-lru-cache"><a href="#caching-cached-property-lru-cache" class="headerlink" title="caching, @cached_property, @lru_cache()"></a>caching, @cached_property, @lru_cache()</h3><p>Retrieving data from cache is much faster than retrieving from database. One thing that needs to keep in mind is that when some data is updated/deleted/created from the database, we should modified tha related data from cache.</p><p>Django provides @cached_property decorator that allows to cache the result of a class method(without parameters) as a property.</p><p>When we wanna cache methods with parameters, we can use @lru_cache().</p><hr><h2 id="Only-retrieve-fields-you-need"><a href="#Only-retrieve-fields-you-need" class="headerlink" title="Only retrieve fields you need"></a>Only retrieve fields you need</h2><h3 id="Try-to-use-values-or-values-list"><a href="#Try-to-use-values-or-values-list" class="headerlink" title="Try to use values() or values_list()"></a>Try to use <code>values()</code> or <code>values_list()</code></h3><p>When you know you only need some specific fields, use <code>values()</code> or <code>values_list()</code>.</p><h2 id="Avoid-a-single-model-serializer-with-multi-layer-nested-serizlizers"><a href="#Avoid-a-single-model-serializer-with-multi-layer-nested-serizlizers" class="headerlink" title="Avoid a single model serializer with multi-layer nested serizlizers"></a>Avoid a single model serializer with multi-layer nested serizlizers</h2><p>Try to provide multiple serializers for a model to support different functionalities</p><ul><li><strong>ListSerializer</strong>: no more than one layer nested serializers (Remember to use select_related() and prefetch_related() on the queryset)</li><li><strong>ReadDetailSerializer</strong>: can have multi layer nested serializers (Remember to use select_related() and prefetch_related() on the queryset)</li><li><strong>WriteDetailSerializer</strong> (for creating or updating): no nested serializers</li></ul><p>Further reading list:<br><a href="https://docs.djangoproject.com/en/dev/topics/db/optimization/" target="_blank" rel="noopener">Django DB Optimation Docs</a></p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Django </tag>
+            
+            <tag> Database </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Python magic methods</title>
       <link href="/2019/11/10/Python-magic-methods/"/>
       <url>/2019/11/10/Python-magic-methods/</url>
@@ -33,7 +54,9 @@
       
         <tags>
             
-            <tag> Python, Test </tag>
+            <tag> Python </tag>
+            
+            <tag> Test </tag>
             
         </tags>
       

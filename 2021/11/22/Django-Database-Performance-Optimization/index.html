@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="en"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>Django Database Performance Optimization | Cindylyl's Notes</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Django Database Performance Optimization</h1><a id="logo" href="/.">Cindylyl's Notes</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> Home</i></a><a href="/archives/"><i class="fa fa-archive"> Archive</i></a><a href="/about/"><i class="fa fa-user"> About</i></a><a href="/atom.xml"><i class="fa fa-rss"> RSS</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Django Database Performance Optimization</h1><div class="post-meta">Nov 22, 2021</div><a class="disqus-comment-count" data-disqus-identifier="2021/11/22/Django-Database-Performance-Optimization/" href="/2021/11/22/Django-Database-Performance-Optimization/#disqus_thread"></a><div class="post-content"><p>As a project grows, our database size turns larger and we may experience longer waiting time when query an API.<br>Then it is time to make some performance optimizations. DB query is one of the items that causes performance reduction.</p>
+<h2 id="Profiling"><a href="#Profiling" class="headerlink" title="Profiling"></a>Profiling</h2><p>The fisrt thing we need to do to address performance issues is profiling. We need to know what are the SQL queries we executes and<br>what how long does executing a query take.</p>
+<h3 id="profiling-tools"><a href="#profiling-tools" class="headerlink" title="profiling tools"></a>profiling tools</h3><ul>
+<li><a href="https://github.com/jazzband/django-silk" target="_blank" rel="noopener">silk</a>: It contains SQL Inspection and <a href="https://docs.python.org/3/library/profile.html?highlight=cprofile#module-cProfile" target="_blank" rel="noopener">cProfile</a>. On SQL Inspection part, it is easy for you to know what are the actual SQL you executes and which line of<br>code triggers the query.</li>
+</ul>
+<hr>
+<h2 id="Retrieve-by-indexed-column"><a href="#Retrieve-by-indexed-column" class="headerlink" title="Retrieve by indexed column"></a>Retrieve by indexed column</h2><p>Try to use</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Employee.objects.filter(id__in=[id1, id2, ...])</span><br></pre></td></tr></table></figure>
+
+<p>instead of</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Employee.objects.filter(name__in=[name1, name2, ...])</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="Avoid-N-1-queries"><a href="#Avoid-N-1-queries" class="headerlink" title="Avoid N+1 queries"></a>Avoid N+1 queries</h2><p>N+1 queries are caused by retrieve foreign key or many to many key model properties. For each model instance, it will produce 1 extra query.<br>Therefore, if we have N model instances, then it will end up N + 1 queries.</p>
+<h3 id="select-related-prefetch-related-Prefetch-object"><a href="#select-related-prefetch-related-Prefetch-object" class="headerlink" title="select_related(), prefetch_related(), Prefetch() object"></a><code>select_related()</code>, <code>prefetch_related()</code>, <code>Prefetch()</code> object</h3><p><code>select_related()</code> implements joins tables on database level, while <code>prefetch_related()</code> implements joins on Python code level.</p>
+<p>Note that if you use <code>iterator()</code> to run the query, <code>prefetch_related()</code> calls will be ignored since these two optimizations do not make sense together.</p>
+<p>Besides, for <code>prefetch_related()</code>, it needs to be noted that it only works for QuerySet <code>all()</code>, any subsequent chained methods which imply a different database query will ignore previously cached results, and retrieve data using a fresh database query.</p>
+<p>For example:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; pizzas = Pizza.objects.prefetch_related(&apos;toppings&apos;)</span><br><span class="line">&gt;&gt;&gt; [list(pizza.toppings.filter(spicy=True)) for pizza in pizzas]</span><br></pre></td></tr></table></figure>
+
+<p>Here, <code>pizza.toppings.all()</code> is the cached result. <code>pizza.toppings.filter(spicy=True)</code> will produce a new query.</p>
+<p>What if we need to pre-fetch from sub query set instead of all query set like above or control the queryset that order by a specific field? <code>Prefetch()</code> object can help.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">spicy_toppings = Toppings.objects.filer(spicy=<span class="literal">True</span>)</span><br><span class="line">pizzas = Pizza.objects.prefetch_related(Prefetch(<span class="string">'toppings'</span>, queryset=spicy_toppings, to_attr=<span class="string">'spicy_toppings'</span>))</span><br></pre></td></tr></table></figure>
+
+<p>Note that assign the prefetched result to a custom attribute with the optional <code>to_attr</code> argument. The result will be stored directly in a list and it can improve speed proformance.</p>
+<h3 id="caching-cached-property-lru-cache"><a href="#caching-cached-property-lru-cache" class="headerlink" title="caching, @cached_property, @lru_cache()"></a>caching, @cached_property, @lru_cache()</h3><p>Retrieving data from cache is much faster than retrieving from database. One thing that needs to keep in mind is that when some data is updated/deleted/created from the database, we should modified tha related data from cache.</p>
+<p>Django provides @cached_property decorator that allows to cache the result of a class method(without parameters) as a property.</p>
+<p>When we wanna cache methods with parameters, we can use @lru_cache().</p>
+<hr>
+<h2 id="Only-retrieve-fields-you-need"><a href="#Only-retrieve-fields-you-need" class="headerlink" title="Only retrieve fields you need"></a>Only retrieve fields you need</h2><h3 id="Try-to-use-values-or-values-list"><a href="#Try-to-use-values-or-values-list" class="headerlink" title="Try to use values() or values_list()"></a>Try to use <code>values()</code> or <code>values_list()</code></h3><p>When you know you only need some specific fields, use <code>values()</code> or <code>values_list()</code>.</p>
+<h2 id="Avoid-a-single-model-serializer-with-multi-layer-nested-serizlizers"><a href="#Avoid-a-single-model-serializer-with-multi-layer-nested-serizlizers" class="headerlink" title="Avoid a single model serializer with multi-layer nested serizlizers"></a>Avoid a single model serializer with multi-layer nested serizlizers</h2><p>Try to provide multiple serializers for a model to support different functionalities</p>
+<ul>
+<li><strong>ListSerializer</strong>: no more than one layer nested serializers (Remember to use select_related() and prefetch_related() on the queryset)</li>
+<li><strong>ReadDetailSerializer</strong>: can have multi layer nested serializers (Remember to use select_related() and prefetch_related() on the queryset)</li>
+<li><strong>WriteDetailSerializer</strong> (for creating or updating): no nested serializers</li>
+</ul>
+<p>Further reading list:<br><a href="https://docs.djangoproject.com/en/dev/topics/db/optimization/" target="_blank" rel="noopener">Django DB Optimation Docs</a></p>
+</div><div class="tags"><a href="/tags/Django/">Django</a><a href="/tags/Database/">Database</a></div><div class="post-nav"><a class="next" href="/2019/11/10/Python-magic-methods/">Python magic methods</a></div><div id="disqus_thread"><div class="btn_click_load"><button class="disqus_click_btn">阅读评论（请确保 Disqus 可以正常加载）</button></div><script type="text/javascript">var disqus_config = function () {
+    this.page.url = 'http://yoursite.com/2021/11/22/Django-Database-Performance-Optimization/';
+    this.page.identifier = '2021/11/22/Django-Database-Performance-Optimization/';
+    this.page.title = 'Django Database Performance Optimization';
+  };</script><script type="text/javascript" id="disqus-lazy-load-script">$.ajax({
+url: 'https://disqus.com/next/config.json',
+timeout: 2500,
+type: 'GET',
+success: function(){
+  var d = document;
+  var s = d.createElement('script');
+  s.src = '//cindylyl.disqus.com/embed.js';
+  s.setAttribute('data-timestamp', + new Date());
+  (d.head || d.body).appendChild(s);
+  $('.disqus_click_btn').css('display', 'none');
+},
+error: function() {
+  $('.disqus_click_btn').css('display', 'block');
+}
+});</script><script type="text/javascript" id="disqus-click-load">$('.btn_click_load').click(() => {  //click to load comments
+    (() => { // DON'T EDIT BELOW THIS LINE
+        var d = document;
+        var s = d.createElement('script');
+        s.src = '//cindylyl.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', + new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+    $('.disqus_click_btn').css('display','none');
+});</script><script type="text/javascript" id="disqus-count-script">$(function() {
+     var xhr = new XMLHttpRequest();
+     xhr.open('GET', '//disqus.com/next/config.json', true);
+     xhr.timeout = 2500;
+     xhr.onreadystatechange = function () {
+       if (xhr.readyState === 4 && xhr.status === 200) {
+         $('.post-meta .post-comments-count').show();
+         var s = document.createElement('script');
+         s.id = 'dsq-count-scr';
+         s.src = 'https://cindylyl.disqus.com/count.js';
+         s.async = true;
+         (document.head || document.body).appendChild(s);
+       }
+     };
+     xhr.ontimeout = function () { xhr.abort(); };
+     xhr.send(null);
+   });
+</script></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> Categories</i></div></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> Tags</i></div><div class="tagcloud"><a href="/tags/Django/" style="font-size: 15px;">Django</a> <a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/Python/" style="font-size: 15px;">Python</a> <a href="/tags/Web-Development/" style="font-size: 15px;">Web Development</a> <a href="/tags/Test/" style="font-size: 15px;">Test</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> Recent</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2021/11/22/Django-Database-Performance-Optimization/">Django Database Performance Optimization</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/10/Python-magic-methods/">Python magic methods</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/09/Django-Test/">Django Unit Test</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/15/Django-rest-framework-View/">Django-rest-framework View</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/Database-transaction/">Database transaction</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/HTTP-Request-Response-Process/">HTTP Request/Response Process</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/Indexing-in-MySQL-Database/">Indexing in MySQL Database</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/hello-world/">Hello World</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-comment-o"> Recent Comments</i></div><script type="text/javascript" src="//cindylyl.disqus.com/recent_comments_widget.js?num_items=5&amp;hide_avatars=1&amp;avatar_size=32&amp;excerpt_length=20&amp;hide_mods=1"></script></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> Links</i></div></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2021 <a href="/." rel="nofollow">Cindylyl's Notes.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
