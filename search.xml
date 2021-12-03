@@ -4,6 +4,25 @@
   
     
     <entry>
+      <title>GraphQL</title>
+      <link href="/2021/12/03/GraphQL/"/>
+      <url>/2021/12/03/GraphQL/</url>
+      
+        <content type="html"><![CDATA[<p>Recently, I read some articles about GraphQL and it looks quite interesting. After further reading, I came up this post.</p><h2 id="What-is-GraphQL"><a href="#What-is-GraphQL" class="headerlink" title="What is GraphQL?"></a>What is GraphQL?</h2><p><a href="https://graphql.org/" target="_blank" rel="noopener">GraphQL</a> is a query language for API, and a server-side runtime for executing queries using a type system you define for your data.</p><p>It is an alternative of REST API.</p><ul><li><p>Only one endpoint</p></li><li><p>Declarative data fetching query</p></li></ul><h2 id="How-can-we-use-GraphQL"><a href="#How-can-we-use-GraphQL" class="headerlink" title="How can we use GraphQL?"></a>How can we use GraphQL?</h2><p>For an API, one basic functionality is querying (It provides some other functionalities as well). What it needs to do is to seriliaze objects from one specific programming language to JSON or deserialize from JSON to an object. GraphQL uses a series of types for serializing/deserializing objects. Here are some core concepts in GraphQL.</p><ol><li><p>Schema<br> A GraphQL Schema defines the types and relationships between Fields in the API.</p></li><li><p>Types<br> By using the type system, it can be predetermined whether a GraphQL request is valid or not. This allows servers and clients to effectively inform developers when an invalid query has been created, without having to rely on runtime checks.</p><ul><li><p>Object type: (&lt;=&gt; like a serializer in DRF?)</p><ul><li>Root object types (These are build-in types):<ul><li>Query: (examples: get request)</li><li>Mutation: (examples: post, patch, delete request)</li><li>Subscription: (websocket, django-channels, push data to the client when new data is available)</li></ul></li></ul></li><li><p>Scalar type:</p><ul><li>Int</li><li>String</li><li>Float</li></ul></li><li><p>Input type:</p><p>Let’s see an object type example:</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">type Author &#123;</span><br><span class="line">        id: ID!</span><br><span class="line">        firstName: String</span><br><span class="line">        lastName: String</span><br><span class="line">        email: String!</span><br><span class="line">        posts: [Post!]</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></li></ul></li><li><p>GraphQL Schema Definition Language (SDL)</p></li></ol><p>How can we make a query? The the basic structure is as below:</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">field &#123;</span><br><span class="line">    subField1&#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    subField2&#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">query &#123;</span><br><span class="line">allAuthors &#123;</span><br><span class="line">    id</span><br><span class="line">    firstName</span><br><span class="line">    lastName</span><br><span class="line">    email</span><br><span class="line">    posts &#123;</span><br><span class="line">    title</span><br><span class="line">    contents</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="What-are-the-benefits-of-GraphQL"><a href="#What-are-the-benefits-of-GraphQL" class="headerlink" title="What are the benefits of GraphQL?"></a>What are the benefits of GraphQL?</h2><ul><li><p>Avoid overfetching<br>Specifying only the data we need rather than accepting large RESTful response, clients consume less data.<br>Don’t need simple version of serializers anymore.</p></li><li><p>Only one endpoint<br>Retrieving multiple pieces of information across different sources in a single request.<br>No need to generate URL on the response.</p></li><li><p>Auto-generate API Documentation<br>Don’t need typescript generator anymore.  Reduce the pain of maintaining API Documentation.</p></li></ul>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> GraphQL </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Django Database Performance Optimization</title>
       <link href="/2021/11/22/Django-Database-Performance-Optimization/"/>
       <url>/2021/11/22/Django-Database-Performance-Optimization/</url>
@@ -14,9 +33,9 @@
       
         <tags>
             
-            <tag> Django </tag>
-            
             <tag> Database </tag>
+            
+            <tag> Django </tag>
             
         </tags>
       

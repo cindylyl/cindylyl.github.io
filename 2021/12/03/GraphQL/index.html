@@ -1,0 +1,106 @@
+<!DOCTYPE html><html lang="en"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>GraphQL | Cindylyl's Notes</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">GraphQL</h1><a id="logo" href="/.">Cindylyl's Notes</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> Home</i></a><a href="/archives/"><i class="fa fa-archive"> Archive</i></a><a href="/about/"><i class="fa fa-user"> About</i></a><a href="/atom.xml"><i class="fa fa-rss"> RSS</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">GraphQL</h1><div class="post-meta">Dec 3, 2021</div><a class="disqus-comment-count" data-disqus-identifier="2021/12/03/GraphQL/" href="/2021/12/03/GraphQL/#disqus_thread"></a><div class="post-content"><p>Recently, I read some articles about GraphQL and it looks quite interesting. After further reading, I came up this post.</p>
+<h2 id="What-is-GraphQL"><a href="#What-is-GraphQL" class="headerlink" title="What is GraphQL?"></a>What is GraphQL?</h2><p><a href="https://graphql.org/" target="_blank" rel="noopener">GraphQL</a> is a query language for API, and a server-side runtime for executing queries using a type system you define for your data.</p>
+<p>It is an alternative of REST API.</p>
+<ul>
+<li><p>Only one endpoint</p>
+</li>
+<li><p>Declarative data fetching query</p>
+</li>
+</ul>
+<h2 id="How-can-we-use-GraphQL"><a href="#How-can-we-use-GraphQL" class="headerlink" title="How can we use GraphQL?"></a>How can we use GraphQL?</h2><p>For an API, one basic functionality is querying (It provides some other functionalities as well). What it needs to do is to seriliaze objects from one specific programming language to JSON or deserialize from JSON to an object. GraphQL uses a series of types for serializing/deserializing objects. Here are some core concepts in GraphQL.</p>
+<ol>
+<li><p>Schema<br> A GraphQL Schema defines the types and relationships between Fields in the API.</p>
+</li>
+<li><p>Types<br> By using the type system, it can be predetermined whether a GraphQL request is valid or not. This allows servers and clients to effectively inform developers when an invalid query has been created, without having to rely on runtime checks.</p>
+<ul>
+<li><p>Object type: (&lt;=&gt; like a serializer in DRF?)</p>
+<ul>
+<li>Root object types (These are build-in types):<ul>
+<li>Query: (examples: get request)</li>
+<li>Mutation: (examples: post, patch, delete request)</li>
+<li>Subscription: (websocket, django-channels, push data to the client when new data is available)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Scalar type:</p>
+<ul>
+<li>Int</li>
+<li>String</li>
+<li>Float</li>
+</ul>
+</li>
+<li><p>Input type:</p>
+<p>Let’s see an object type example:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">type Author &#123;</span><br><span class="line">        id: ID!</span><br><span class="line">        firstName: String</span><br><span class="line">        lastName: String</span><br><span class="line">        email: String!</span><br><span class="line">        posts: [Post!]</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>GraphQL Schema Definition Language (SDL)</p>
+</li>
+</ol>
+<p>How can we make a query? The the basic structure is as below:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">field &#123;</span><br><span class="line">    subField1&#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    subField2&#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">query &#123;</span><br><span class="line">allAuthors &#123;</span><br><span class="line">    id</span><br><span class="line">    firstName</span><br><span class="line">    lastName</span><br><span class="line">    email</span><br><span class="line">    posts &#123;</span><br><span class="line">    title</span><br><span class="line">    contents</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="What-are-the-benefits-of-GraphQL"><a href="#What-are-the-benefits-of-GraphQL" class="headerlink" title="What are the benefits of GraphQL?"></a>What are the benefits of GraphQL?</h2><ul>
+<li><p>Avoid overfetching<br>Specifying only the data we need rather than accepting large RESTful response, clients consume less data.<br>Don’t need simple version of serializers anymore.</p>
+</li>
+<li><p>Only one endpoint<br>Retrieving multiple pieces of information across different sources in a single request.<br>No need to generate URL on the response.</p>
+</li>
+<li><p>Auto-generate API Documentation<br>Don’t need typescript generator anymore.  Reduce the pain of maintaining API Documentation.</p>
+</li>
+</ul>
+</div><div class="tags"><a href="/tags/GraphQL/">GraphQL</a></div><div class="post-nav"><a class="next" href="/2021/11/22/Django-Database-Performance-Optimization/">Django Database Performance Optimization</a></div><div id="disqus_thread"><div class="btn_click_load"><button class="disqus_click_btn">阅读评论（请确保 Disqus 可以正常加载）</button></div><script type="text/javascript">var disqus_config = function () {
+    this.page.url = 'http://yoursite.com/2021/12/03/GraphQL/';
+    this.page.identifier = '2021/12/03/GraphQL/';
+    this.page.title = 'GraphQL';
+  };</script><script type="text/javascript" id="disqus-lazy-load-script">$.ajax({
+url: 'https://disqus.com/next/config.json',
+timeout: 2500,
+type: 'GET',
+success: function(){
+  var d = document;
+  var s = d.createElement('script');
+  s.src = '//cindylyl.disqus.com/embed.js';
+  s.setAttribute('data-timestamp', + new Date());
+  (d.head || d.body).appendChild(s);
+  $('.disqus_click_btn').css('display', 'none');
+},
+error: function() {
+  $('.disqus_click_btn').css('display', 'block');
+}
+});</script><script type="text/javascript" id="disqus-click-load">$('.btn_click_load').click(() => {  //click to load comments
+    (() => { // DON'T EDIT BELOW THIS LINE
+        var d = document;
+        var s = d.createElement('script');
+        s.src = '//cindylyl.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', + new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+    $('.disqus_click_btn').css('display','none');
+});</script><script type="text/javascript" id="disqus-count-script">$(function() {
+     var xhr = new XMLHttpRequest();
+     xhr.open('GET', '//disqus.com/next/config.json', true);
+     xhr.timeout = 2500;
+     xhr.onreadystatechange = function () {
+       if (xhr.readyState === 4 && xhr.status === 200) {
+         $('.post-meta .post-comments-count').show();
+         var s = document.createElement('script');
+         s.id = 'dsq-count-scr';
+         s.src = 'https://cindylyl.disqus.com/count.js';
+         s.async = true;
+         (document.head || document.body).appendChild(s);
+       }
+     };
+     xhr.ontimeout = function () { xhr.abort(); };
+     xhr.send(null);
+   });
+</script></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> Categories</i></div></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> Tags</i></div><div class="tagcloud"><a href="/tags/Python/" style="font-size: 15px;">Python</a> <a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/GraphQL/" style="font-size: 15px;">GraphQL</a> <a href="/tags/Django/" style="font-size: 15px;">Django</a> <a href="/tags/Web-Development/" style="font-size: 15px;">Web Development</a> <a href="/tags/Test/" style="font-size: 15px;">Test</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> Recent</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2021/12/03/GraphQL/">GraphQL</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/11/22/Django-Database-Performance-Optimization/">Django Database Performance Optimization</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/11/10/Python-magic-methods/">Python magic methods</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/09/Django-Test/">Django Unit Test</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/15/Django-rest-framework-View/">Django-rest-framework View</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/Database-transaction/">Database transaction</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/HTTP-Request-Response-Process/">HTTP Request/Response Process</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/Indexing-in-MySQL-Database/">Indexing in MySQL Database</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/29/hello-world/">Hello World</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-comment-o"> Recent Comments</i></div><script type="text/javascript" src="//cindylyl.disqus.com/recent_comments_widget.js?num_items=5&amp;hide_avatars=1&amp;avatar_size=32&amp;excerpt_length=20&amp;hide_mods=1"></script></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> Links</i></div></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2021 <a href="/." rel="nofollow">Cindylyl's Notes.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
